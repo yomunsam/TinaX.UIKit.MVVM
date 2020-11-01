@@ -35,5 +35,6 @@ namespace TinaX.UIKit.MVVM
             bool IsTheRawGenericType(Type test)
             => generic == (test.IsGenericType ? test.GetGenericTypeDefinition() : test);
         }
+
     }
 }

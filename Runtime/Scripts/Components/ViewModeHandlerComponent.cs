@@ -1,6 +1,7 @@
 ﻿using TinaX.Core.Localization;
 using TinaX.UIKit.MVVM.Pipeline;
 using TinaX.UIKit.MVVM.Services;
+using TinaX.Utils;
 using UnityEngine;
 
 namespace TinaX.UIKit.MVVM.Components
@@ -13,6 +14,8 @@ namespace TinaX.UIKit.MVVM.Components
     [RequireComponent(typeof(UIPage))]
     public class ViewModeHandlerComponent : MonoBehaviour
     {
+        public DisposableGroup DisposableGroup { get; private set; } = new DisposableGroup();
+
         private IUIKitMvvmService _MvvmService;
         private IViewModelHandler _ViewModelHandler;
 
@@ -42,6 +45,11 @@ namespace TinaX.UIKit.MVVM.Components
             HandleDataBinding();
         }
 
+
+        private void OnDestroy()
+        {
+            this.DisposableGroup?.Dispose();
+        }
 
         private void HandleDataBinding()
         {
