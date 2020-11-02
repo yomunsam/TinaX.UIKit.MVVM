@@ -21,7 +21,7 @@ namespace TinaX.UIKit.MVVM.Pipeline
 
         public IViewModelHandler Handler => this;
 
-        public bool HandleViewModel(ViewModeHandlerComponent handlerComponent, IUIKitMvvmService mvvmService)
+        public bool HandleViewModel(BinderHandlerBaseComponent handlerComponent, IUIKitMvvmService mvvmService)
         {
             var xcomponent = handlerComponent.gameObject.GetComponent<TinaX.XComponent.XComponent>();
             if(xcomponent == null)
@@ -33,14 +33,19 @@ namespace TinaX.UIKit.MVVM.Pipeline
 
             //获取所有Binder组件
             var binders = handlerComponent.gameObject.GetComponentsInChildren<BinderBase>();
-            Debug.Log("获取到Binder组件数：" + binders.Length);
+            //Debug.Log("获取到Binder组件数：" + binders.Length);
 
 
 
             //反射出所有绑定数据
             Dictionary<string, object> _dict_BindableProperties = new Dictionary<string, object>(); //string:key , object: bindableProperty
             this.TraverseBindingDataRecursion(ref _dict_BindableProperties, xbehaviour, mvvmService.BindingQueryRecursionDepth, 1, true);
-            Debug.Log("反射绑定数据完成");
+            //Debug.Log("反射绑定数据完成");
+
+            //反射所有Command
+            Dictionary<string, Delegate> _dict_commands = new Dictionary<string, Delegate>();
+            this.GetCommands(ref _dict_commands, xbehaviour);
+
 
             //处理Binder
             foreach(var binder in binders)
@@ -50,9 +55,18 @@ namespace TinaX.UIKit.MVVM.Pipeline
                 {
                     this.HandleListenTo(binder, ref handlerComponent, ref _dict_BindableProperties);
                 }
+
+                //处理事件发射器
+                if(binder is IEventEmitter)
+                {
+                    this.HandleEventEmitter(binder, ref handlerComponent, ref _dict_commands);
+                }
             }
 
+            _dict_BindableProperties.Clear();
             _dict_BindableProperties = null;
+            _dict_commands.Clear();
+            _dict_commands = null;
 
             return true;
         }
@@ -108,8 +122,37 @@ namespace TinaX.UIKit.MVVM.Pipeline
             }
         }
 
+        /// <summary>
+        /// 获取Commands
+        /// </summary>
+        /// <param name="resultDict">存放结果的字典</param>
+        /// <param name="targetObj">在某个对象里寻找</param>
+        /// <param name="ParentPath">存入字典的时候要不要拼接父级Path</param>
+        private void GetCommands(ref Dictionary<string,Delegate> resultDict, object targetObj, string ParentPath = null)
+        {
+            var targetType = targetObj.GetType();
+            var methods = targetType.GetMethods(BindingFlags.Public | BindingFlags.Instance);
+            if(methods != null && methods.Length > 0)
+            {
+                foreach(var method in methods)
+                {
+                    var attribute = method.GetCustomAttribute<CommandAttribute>(true);
+                    if (attribute == null)
+                        continue;
+                    var parameters = method.GetParameters();
+                    if (parameters.Length != 0)
+                        continue;
+                    if (method.ReturnType != typeof(void))
+                        continue;
 
-        private void HandleListenTo(BinderBase binder, ref ViewModeHandlerComponent handlerComponent, ref Dictionary<string, object> dict_bindableProperties)
+                    Delegate dCommand = Delegate.CreateDelegate(typeof(Action), targetObj, method);
+                    string pathName = ParentPath == null ? method.Name : $"{ParentPath}.{method.Name}";
+                    resultDict.AddOrOverride(pathName, dCommand);
+                }
+            }
+        }
+
+        private void HandleListenTo(BinderBase binder, ref BinderHandlerBaseComponent handlerComponent, ref Dictionary<string, object> dict_bindableProperties)
         {
             string bindingPath = binder.BindingPath;
             if (dict_bindableProperties.TryGetValue(bindingPath, out object _bindable)) //查找Path
@@ -156,9 +199,15 @@ namespace TinaX.UIKit.MVVM.Pipeline
         /// <summary>
         /// 处理事件发射器
         /// </summary>
-        private void HandleEventEmitter()
+        private void HandleEventEmitter(BinderBase binder, ref BinderHandlerBaseComponent handlerComponent, ref Dictionary<string, Delegate> dict_commands)
         {
-
+            string bindingPath = binder.BindingPath;
+            if (dict_commands.TryGetValue(bindingPath, out Delegate _delegate)) //查找Path
+            {
+                //执行绑定
+                EventBindingConverter converter = new EventBindingConverter((IEventEmitter)binder, (Action)_delegate);
+                handlerComponent.DisposableGroup.Register(converter);
+            }
         }
 
         /// <summary>

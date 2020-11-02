@@ -11,11 +11,27 @@ namespace TinaX.UIKit.MVVM.BindingConverter
     /// <summary>
     /// 处理IEventEmitter的
     /// </summary>
-    public class EventBindingConverter
+#pragma warning disable CA1063 // Implement IDisposable Correctly
+    public class EventBindingConverter : IDisposable
     {
-        public EventBindingConverter(IEventEmitter eventEmitter, object MethodObj, MethodInfo method)
-        {
+        private IEventEmitter _EventEmitter;
+        private Action _Action;
 
+        public EventBindingConverter(IEventEmitter eventEmitter, Action action)
+        {
+            _EventEmitter = eventEmitter;
+            _Action = action;
+            _EventEmitter.OnEvent += _Action;
+        }
+
+        public void Dispose()
+        {
+            if(_EventEmitter != null && _Action != null)
+            {
+                _EventEmitter.OnEvent -= _Action;
+            }
         }
     }
+#pragma warning restore CA1063 // Implement IDisposable Correctly
+
 }

@@ -15,7 +15,7 @@ namespace TinaX.UIKit.MVVM.Components
     {
         public T Target;
 
-        public ViewModeHandlerComponent ViewModeHandler { get; private set; }
+        public UIPageBinderHandlerComponent ViewModeHandler { get; private set; }
 
         protected virtual void Awake()
         {
@@ -32,7 +32,7 @@ namespace TinaX.UIKit.MVVM.Components
 
 
 
-        private ViewModeHandlerComponent TryGetViewModeHandlerOrCreate()
+        private UIPageBinderHandlerComponent TryGetViewModeHandlerOrCreate()
         {
             UIPage page = this.transform.GetComponentInParent<UIPage>();
             if(page == null)
@@ -42,7 +42,7 @@ namespace TinaX.UIKit.MVVM.Components
 
             lock (page)
             {
-                return page.gameObject.GetComponentOrAdd<ViewModeHandlerComponent>();
+                return page.gameObject.GetComponentOrAdd<UIPageBinderHandlerComponent>();
             }
         }
     }

@@ -6,6 +6,6 @@ namespace TinaX.UIKit.MVVM.Pipeline
 {
     public interface IViewModelHandler : IPipelineHandler<IViewModelHandler>
     {
-        bool HandleViewModel(ViewModeHandlerComponent handlerComponent, IUIKitMvvmService mvvmService);
+        bool HandleViewModel(BinderHandlerBaseComponent handlerComponent, IUIKitMvvmService mvvmService);
     }
 }
