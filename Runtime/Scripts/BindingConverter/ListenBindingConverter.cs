@@ -30,6 +30,8 @@ namespace TinaX.UIKit.MVVM.BindingConverter
             
 
             _BindableProperty.ValueChanged += OnPropertyValueChanged;
+
+            _BindableProperty.SendValueChanged();
         }
 
         private void OnPropertyValueChanged(TBindableProperty oldValue, TBindableProperty newValue)

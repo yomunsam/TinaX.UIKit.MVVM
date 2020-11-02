@@ -17,5 +17,7 @@ namespace TinaX.UIKit.MVVM.Services
         int BindingQueryRecursionDepth { get; set; }
 
         XPipeline<IViewModelHandler> ViewModeHandlers { get; }
+
+        string GetI18NText(string key, string group, string defaultValue);
     }
 }

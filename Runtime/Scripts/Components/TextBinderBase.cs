@@ -1,4 +1,9 @@
 ﻿using TinaX.UIKit.MVVM.Interfaces;
+using UnityEngine;
+
+#if ODIN_INSPECTOR
+using Sirenix.OdinInspector;
+#endif
 
 namespace TinaX.UIKit.MVVM.Components
 {
@@ -20,8 +25,18 @@ namespace TinaX.UIKit.MVVM.Components
         public delegate void SetValueDelegate(string value, TextBinderBase<T> binder);
 
         public FormatMode ValueFormatMode;
+#if ODIN_INSPECTOR
+        [ShowIf("Odin_IsTextMessageMode")]
+#endif
+        [TextArea]
         public string TextMessage;
-        public string I18NGroup;
+#if ODIN_INSPECTOR
+        [ShowIf("Odin_IsI18NMode")]
+#endif
+        public string I18NGroup = "common";
+#if ODIN_INSPECTOR
+        [ShowIf("Odin_IsI18NMode")]
+#endif
         public string I18NKey;
 
         public SetValueDelegate SetValue { get; set; }
@@ -53,6 +68,13 @@ namespace TinaX.UIKit.MVVM.Components
         protected virtual void SetValueTextMessage(string value, TextBinderBase<T> binder) { }
 
         protected virtual void SetValueI18N(string value, TextBinderBase<T> binder) { }
+
+
+#if ODIN_INSPECTOR
+        bool Odin_IsTextMessageMode() => this.ValueFormatMode == FormatMode.TextMessage;
+        bool Odin_IsNormalMode() => this.ValueFormatMode == FormatMode.Normal;
+        bool Odin_IsI18NMode() => this.ValueFormatMode == FormatMode.I18NValue;
+#endif
 
     }
 }

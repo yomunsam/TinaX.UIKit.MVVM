@@ -17,7 +17,10 @@ namespace TinaX.UIKit.MVVM.Components
         private IViewModelHandler _ViewModelHandler;
 
 
-
+        protected override void Awake()
+        {
+            base.Awake();
+        }
 
         protected override void Start()
         {
