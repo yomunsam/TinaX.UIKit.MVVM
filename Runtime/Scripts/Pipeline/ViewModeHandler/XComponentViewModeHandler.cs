@@ -56,11 +56,18 @@ namespace TinaX.UIKit.MVVM.Pipeline
                     this.HandleListenTo(binder, ref handlerComponent, ref _dict_BindableProperties);
                 }
 
+                //处理数据提供者
+                if(binder is IDataProducer)
+                {
+                    this.HandleProducer(binder, ref handlerComponent, ref _dict_BindableProperties);
+                }
+
                 //处理事件发射器
                 if(binder is IEventEmitter)
                 {
                     this.HandleEventEmitter(binder, ref handlerComponent, ref _dict_commands);
                 }
+
             }
 
             _dict_BindableProperties.Clear();
@@ -173,7 +180,7 @@ namespace TinaX.UIKit.MVVM.Pipeline
                     }
                 }
 
-                //数据提供者的泛型
+                //数据消费者的泛型
                 Type binderType = ((IDataConsumer)binder).GetType();
                 var binderGenericsType = this.GetDataConsumerType(binderType);
 
@@ -210,8 +217,53 @@ namespace TinaX.UIKit.MVVM.Pipeline
             }
         }
 
+        private void HandleProducer(BinderBase binder , ref BinderHandlerBaseComponent handlerComponent, ref Dictionary<string,object> dict_bindableProperties)
+        {
+            string bindingPath = binder.BindingPath;
+            if (dict_bindableProperties.TryGetValue(bindingPath, out object _bindable)) //查找Path
+            {
+                Type bindableType = _bindable.GetType();
+                //BindableProperty 泛型类型
+                Type bindablePropertyGenericsType = bindableType.GetGenericArguments().FirstOrDefault();
+                if (bindablePropertyGenericsType == null)
+                {
+                    if (XCore.MainInstance?.IsCmnHans() ?? false)
+                    {
+                        //中文报错：
+                        Debug.LogError($"[TinaX.UIKit.MVVM]绑定路径\"{bindingPath}\"是一个无效的BindableProperty");
+                    }
+                    else
+                    {
+                        Debug.LogError($"[TinaX.UIKit.MVVM]Binding path \"{bindingPath}\"is invalid BindableProperty");
+                    }
+                }
+
+
+                //数据提供者的泛型类型
+                Type binderType = ((IDataProducer)binder).GetType();
+                var binderGenericsType = this.GetDataProducerType(binderType);
+
+                if (binderGenericsType == bindablePropertyGenericsType)
+                {
+                    //反射生成一个同类型的监听绑定转换器 
+                    var converterType = typeof(ProducerBindingSameType<>).MakeGenericType(new Type[] { binderGenericsType });
+                    var converter = XCore.MainInstance.CreateInstance(converterType, new object[] { _bindable, binder });
+                    //把生成的绑定转换器交给ViewHandlerComponent来管理生命周期。
+                    handlerComponent.DisposableGroup.Register((IDisposable)converter);
+                }
+                else
+                {
+                    //反射生成一个“可绑定属性”与“数据消费者” 类型不一致的绑定转换器
+                    var converterType = typeof(ProducerBindingConverter<,>).MakeGenericType(new Type[] { bindablePropertyGenericsType, binderGenericsType });
+                    var converter = XCore.MainInstance.CreateInstance(converterType, new object[] { _bindable, binder });
+                    //把生成的绑定转换器交给ViewHandlerComponent来管理生命周期
+                    handlerComponent.DisposableGroup.Register((IDisposable)converter);
+                }
+            }
+        }
+
         /// <summary>
-        /// 获取数据提供者的泛型类型
+        /// 获取数据消费者的泛型类型
         /// </summary>
         /// <returns></returns>
         private Type GetDataConsumerType(Type type)
@@ -227,6 +279,33 @@ namespace TinaX.UIKit.MVVM.Pipeline
                 if (i.IsGenericType)
                 {
                     if(typeof(IDataConsumer).IsAssignableFrom(i))
+                    {
+                        return i.GetGenericArguments().FirstOrDefault();
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// 获取数据提供者的泛型类型
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        private Type GetDataProducerType(Type type)
+        {
+            if (type == null) throw new ArgumentNullException(nameof(type));
+
+            var interfaces = type.GetInterfaces();
+            if (interfaces == null || interfaces.Length < 1)
+                return null;
+
+            foreach (var i in interfaces)
+            {
+                if (i.IsGenericType)
+                {
+                    if (typeof(IDataProducer).IsAssignableFrom(i))
                     {
                         return i.GetGenericArguments().FirstOrDefault();
                     }

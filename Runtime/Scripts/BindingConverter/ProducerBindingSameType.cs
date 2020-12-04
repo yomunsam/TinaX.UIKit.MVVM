@@ -5,34 +5,30 @@ using TinaX.UIKit.MVVM.Interfaces;
 namespace TinaX.UIKit.MVVM.BindingConverter
 {
     /// <summary>
-    /// 监听 绑定转换器 （可监听属性 和 数据消费者为同一类型）
+    /// 数据提供者 绑定转换器 - 可监听属性和数据提供者为同一类型
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class ListenBindingSameType<T> : IDisposable
+    public class ProducerBindingSameType <T> : IDisposable
     {
         private BindableProperty<T> _BindableProperty;
-        private IDataConsumer<T> _DataConsumer;
-
+        private IDataProducer<T> _DataProducer;
 
         private bool disposedValue;
 
-        public ListenBindingSameType(BindableProperty<T> bindableProperty, IDataConsumer<T> dataConsumer)
+        public ProducerBindingSameType(BindableProperty<T> bindableProperty , IDataProducer<T> dataProducer)
         {
             if (bindableProperty == null) throw new ArgumentNullException(nameof(bindableProperty));
-            if (dataConsumer == null) throw new ArgumentNullException(nameof(dataConsumer));
+            if (dataProducer == null) throw new ArgumentNullException(nameof(dataProducer));
 
             _BindableProperty = bindableProperty;
-            _DataConsumer = dataConsumer;
+            _DataProducer = dataProducer;
 
-
-
-            _BindableProperty.ValueChanged += OnPropertyValueChanged;
-            _BindableProperty.SendValueChanged();
+            _DataProducer.OnValueChange += OnProducerValueChanged;
         }
 
-        private void OnPropertyValueChanged(T oldValue, T newValue)
+        private void OnProducerValueChanged(T value)
         {
-            _DataConsumer.Value = newValue;
+            _BindableProperty.Value = value;
         }
 
         protected virtual void Dispose(bool disposing)
@@ -41,26 +37,25 @@ namespace TinaX.UIKit.MVVM.BindingConverter
             {
                 if (disposing)
                 {
-                    //释放托管状态(托管对象) | 释放本对象中管理的托管资源
+                    // 释放托管状态(托管对象)
                 }
 
-                //释放未托管的资源(未托管的对象)并替代终结器
-                //将大型字段设置为 null
+                // 释放未托管的资源(未托管的对象)并替代终结器
+                // 将大型字段设置为 null
 
                 //------释放本对象注册的委托
-                if (_BindableProperty != null)
-                    _BindableProperty.ValueChanged -= OnPropertyValueChanged;
+                if (_DataProducer != null)
+                    _DataProducer.OnValueChange -= OnProducerValueChanged;
 
                 _BindableProperty = null;
-                _DataConsumer = null;
+                _DataProducer = null;
 
                 disposedValue = true;
             }
         }
 
-
         // // TODO: 仅当“Dispose(bool disposing)”拥有用于释放未托管资源的代码时才替代终结器
-        // ~ListenBindingSameType()
+        // ~ProducerBindingSameType()
         // {
         //     // 不要更改此代码。请将清理代码放入“Dispose(bool disposing)”方法中
         //     Dispose(disposing: false);

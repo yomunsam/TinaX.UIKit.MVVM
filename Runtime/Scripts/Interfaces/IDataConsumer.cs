@@ -1,16 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace TinaX.UIKit.MVVM.Interfaces
+﻿namespace TinaX.UIKit.MVVM.Interfaces
 {
     /// <summary>
     /// 数据消费者
     /// </summary>
     public interface IDataConsumer { }
 
+    /// <summary>
+    /// 数据消费者 泛型
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     public interface IDataConsumer<T> : IDataConsumer
     {
         T Value { set; }
