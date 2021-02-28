@@ -48,7 +48,7 @@ namespace TinaX.UIKit.MVVM.BindingConverter
                     }
                     if (_bindableType.IsAssignableFrom(typeof(long)))
                     {
-                        _BindableProperty.Value = (TBindableProperty)(object)0l;
+                        _BindableProperty.Value = (TBindableProperty)(object)0L;
                         return;
                     }
                     if (_bindableType.IsAssignableFrom(typeof(float)))
