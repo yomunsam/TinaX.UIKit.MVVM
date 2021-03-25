@@ -4,7 +4,7 @@ using TinaX.UIKit.MVVM.Services;
 
 namespace TinaX.UIKit.MVVM.Pipeline
 {
-    public interface IViewModelHandler : IPipelineHandler<IViewModelHandler>
+    public interface IViewModelHandler
     {
         bool HandleViewModel(BinderHandlerBaseComponent handlerComponent, IUIKitMvvmService mvvmService);
     }

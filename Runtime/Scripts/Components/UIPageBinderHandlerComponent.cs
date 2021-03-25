@@ -40,10 +40,10 @@ namespace TinaX.UIKit.MVVM.Components
         {
             _MvvmService.ViewModeHandlers.Start(handler =>
             {
-                bool _break = handler.Handler.HandleViewModel(this, _MvvmService);
+                bool _break = handler.HandleViewModel(this, _MvvmService);
                 if (_break)
                 {
-                    _ViewModelHandler = handler.Handler;
+                    _ViewModelHandler = handler;
                     //Debug.Log("命中ViewModelHandler:" + _ViewModelHandler.ToString());
                     return false;
                 }
